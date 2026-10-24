@@ -20,4 +20,6 @@ public class StudentRegistrationDTO {
     private String grade;
     private String status;
     private Integer credits;
+    private String schedule;
+    private Long semesterId;
 }

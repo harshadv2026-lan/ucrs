@@ -33,18 +33,37 @@ public class SemesterController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Semester>> create(@RequestBody Semester semester) {
+    public ResponseEntity<ApiResponse<Semester>> create(
+            @RequestBody Semester semester,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can create semesters"));
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(semesterService.create(semester), "Semester created"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Semester>> update(@PathVariable Long id, @RequestBody Semester semester) {
+    public ResponseEntity<ApiResponse<Semester>> update(
+            @PathVariable Long id,
+            @RequestBody Semester semester,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can update semesters"));
+        }
         return ResponseEntity.ok(ApiResponse.success(semesterService.update(id, semester), "Semester updated"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can delete semesters"));
+        }
         semesterService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Semester deleted"));
     }

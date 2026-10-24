@@ -93,7 +93,8 @@ export default function CourseCatalogue() {
       ) : (
         <div className="courses-grid">
           {filtered.map(offering => {
-            const pct = offering.maxSeats > 0 ? Math.round(((offering.enrolledCount || offering.enrolled || 0) / offering.maxSeats) * 100) : 0
+            const enrolled = offering.registeredCount ?? 0
+            const pct = offering.maxSeats > 0 ? Math.round((enrolled / offering.maxSeats) * 100) : 0
             const colorClass = pct >= 90 ? 'low' : pct >= 60 ? 'medium' : 'high'
             return (
               <div key={offering.offeringId || offering.id} className="course-card">
@@ -123,14 +124,14 @@ export default function CourseCatalogue() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: 'var(--gray-600)' }}>Seats Available</span>
                     <span style={{ fontWeight: 600 }}>
-                      {Math.max(0, (offering.maxSeats || 0) - (offering.enrolledCount || offering.enrolled || 0))} left
+                      {Math.max(0, (offering.maxSeats || 0) - enrolled)} left
                     </span>
                   </div>
                   <div className="seats-bar">
                     <div className={`seats-bar-fill ${colorClass}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                   </div>
                   <div className="seats-text">
-                    {offering.enrolledCount || offering.enrolled || 0} / {offering.maxSeats || '?'} enrolled
+                    {enrolled} / {offering.maxSeats || '?'} enrolled
                   </div>
                 </div>
 
@@ -164,7 +165,7 @@ export default function CourseCatalogue() {
                 <div><div className="form-label">Faculty</div><div>{selected.facultyName || '—'}</div></div>
                 <div><div className="form-label">Schedule</div><div>{selected.schedule || '—'}</div></div>
                 <div><div className="form-label">Max Seats</div><div>{selected.maxSeats || '—'}</div></div>
-                <div><div className="form-label">Enrolled</div><div>{selected.enrolledCount || selected.enrolled || 0}</div></div>
+                <div><div className="form-label">Enrolled</div><div>{selected.registeredCount ?? 0}</div></div>
               </div>
               {selected.description && (
                 <div style={{ marginBottom: 16 }}>

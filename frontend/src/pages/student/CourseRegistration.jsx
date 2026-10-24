@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import apiService from '../../services/api.js'
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx'
 import AlertMessage from '../../components/common/AlertMessage.jsx'
-import { ClipboardList, Check, AlertTriangle, Users } from 'lucide-react'
+import SearchBar from '../../components/common/SearchBar.jsx'
+import { findConflictingRegistration } from '../../utils/schedule.js'
+import { ClipboardList, Check, Users, Calendar, AlertTriangle, BookOpen, Clock } from 'lucide-react'
+
+const MAX_SEMESTER_CREDITS = 20
 
 export default function CourseRegistration() {
   const { user } = useAuth()
   const [offerings, setOfferings] = useState([])
   const [semesters, setSemesters] = useState([])
+  const [departments, setDepartments] = useState([])
   const [myRegistrations, setMyRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterSem, setFilterSem] = useState('')
+  const [filterDept, setFilterDept] = useState('')
+  const [search, setSearch] = useState('')
+  const [hideFull, setHideFull] = useState(false)
   const [registering, setRegistering] = useState(null)
   const [alert, setAlert] = useState(null)
 
@@ -22,11 +31,13 @@ export default function CourseRegistration() {
     Promise.all([
       apiService.offerings.getAll(filterSem ? { semesterId: filterSem } : {}),
       apiService.semesters.getAll(),
+      apiService.departments.getAll(),
       apiService.registrations.getByStudent(regNo)
-    ]).then(([o, s, r]) => {
+    ]).then(([o, s, d, r]) => {
       setOfferings(Array.isArray(o.data?.data) ? o.data.data : Array.isArray(o.data) ? o.data : [])
       const sems = Array.isArray(s.data?.data) ? s.data.data : Array.isArray(s.data) ? s.data : []
       setSemesters(sems)
+      setDepartments(Array.isArray(d.data?.data) ? d.data.data : Array.isArray(d.data) ? d.data : [])
       if (!filterSem) {
         const active = sems.find(sem => sem.isActive || sem.is_active)
         if (active) setFilterSem(String(active.semesterId || active.id))
@@ -37,8 +48,26 @@ export default function CourseRegistration() {
 
   useEffect(() => { if (regNo) loadData() }, [regNo, filterSem])
 
+  // Active registered courses in the chosen semester
+  const activeRegistrationsInSem = myRegistrations.filter(r => {
+    if (r.status !== 'REGISTERED') return false
+    if (!filterSem) return true
+    return String(r.semesterId) === filterSem || String(r.offering?.semester?.semesterId) === filterSem
+  })
+
+  // Calculate current credits in semester
+  const currentSemesterCredits = activeRegistrationsInSem.reduce((sum, r) => sum + (r.credits || 0), 0)
+  const creditsRemaining = Math.max(0, MAX_SEMESTER_CREDITS - currentSemesterCredits)
+  const creditPct = Math.min(100, Math.round((currentSemesterCredits / MAX_SEMESTER_CREDITS) * 100))
+
   const registeredOfferingIds = new Set(
     myRegistrations.filter(r => r.status === 'REGISTERED').map(r => r.offeringId || r.offering?.offeringId)
+  )
+  const completedOfferingIds = new Set(
+    myRegistrations.filter(r => r.status === 'COMPLETED').map(r => r.offeringId || r.offering?.offeringId)
+  )
+  const completedCourseIds = new Set(
+    myRegistrations.filter(r => r.status === 'COMPLETED' && r.grade).map(r => r.courseId || r.offering?.course?.courseId)
   )
 
   async function handleRegister(offering) {
@@ -60,46 +89,126 @@ export default function CourseRegistration() {
     }
   }
 
-  const displayed = offerings.filter(o =>
-    !filterSem || String(o.semesterId) === filterSem
-  )
+  const displayed = offerings.filter(o => {
+    const matchSem = !filterSem || String(o.semesterId) === filterSem
+    const matchDept = !filterDept || String(o.departmentId || o.department?.deptId) === filterDept || (o.departmentName && o.departmentName.toLowerCase().includes(filterDept.toLowerCase()))
+    const enrolled = o.registeredCount ?? 0
+    const max = o.maxSeats || 0
+    const full = enrolled >= max && max > 0
+    if (hideFull && full) return false
+
+    const q = search.toLowerCase()
+    const matchSearch = !q ||
+      (o.courseName || '').toLowerCase().includes(q) ||
+      (o.courseId || '').toLowerCase().includes(q) ||
+      (o.facultyName || '').toLowerCase().includes(q)
+
+    return matchSem && matchDept && matchSearch
+  })
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Course Registration</h1>
-        <p>Register for course offerings available this semester.</p>
+      <div className="page-header-row" style={{ marginBottom: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700 }}>Course Registration</h1>
+          <p style={{ color: 'var(--gray-600)', marginTop: 4 }}>
+            Register for course offerings with live conflict detection and seat availability.
+          </p>
+        </div>
+        <Link to="/student/timetable" className="btn btn-secondary">
+          <Calendar size={15} /> View My Timetable
+        </Link>
       </div>
 
       {alert && (
         <AlertMessage type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
-      <div className="filters-row" style={{ marginBottom: 20 }}>
-        <label style={{ fontWeight: 600, fontSize: 13, color: 'var(--gray-700)', whiteSpace: 'nowrap' }}>
-          Semester:
-        </label>
-        <select
-          className="filter-select"
-          value={filterSem}
-          onChange={e => setFilterSem(e.target.value)}
-        >
-          <option value="">All Semesters</option>
-          {semesters.map(s => (
-            <option key={s.semesterId || s.id} value={String(s.semesterId || s.id)}>
-              {s.name || s.semesterName} {(s.isActive || s.is_active) ? '(Active)' : ''}
-            </option>
-          ))}
-        </select>
+      {/* Credit Tracking Card */}
+      <div className="card" style={{ marginBottom: 20, padding: '16px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <span style={{ fontSize: 13, color: 'var(--gray-600)', fontWeight: 600 }}>Semester Credit Load Tracker</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)' }}>{currentSemesterCredits}</span>
+              <span style={{ fontSize: 13, color: 'var(--gray-600)' }}>/ {MAX_SEMESTER_CREDITS} Max Allowed Credits</span>
+              <span className={`badge ${creditPct >= 90 ? 'badge-warning' : 'badge-info'}`} style={{ marginLeft: 6 }}>
+                {creditsRemaining} cr remaining
+              </span>
+            </div>
+          </div>
+          <div style={{ minWidth: '220px', flex: 1, maxWidth: '340px' }}>
+            <div style={{ height: 8, background: 'var(--gray-200)', borderRadius: 99, overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${creditPct}%`,
+                  background: creditPct >= 90 ? 'var(--warning)' : 'var(--blue)',
+                  transition: 'width 0.3s'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--gray-600)', marginTop: 4 }}>
+              <span>0 cr</span>
+              <span>12 cr (Full-Time)</span>
+              <span>20 cr (Max)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters Row */}
+      <div className="card" style={{ marginBottom: 20, padding: '14px 18px' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search course code, title, faculty..." />
+          </div>
+
+          <select
+            className="filter-select"
+            value={filterSem}
+            onChange={e => setFilterSem(e.target.value)}
+          >
+            <option value="">All Semesters</option>
+            {semesters.map(s => (
+              <option key={s.semesterId || s.id} value={String(s.semesterId || s.id)}>
+                {s.name || s.semesterName} {(s.isActive || s.is_active) ? '(Active)' : ''}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={filterDept}
+            onChange={e => setFilterDept(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {departments.map(d => (
+              <option key={d.deptId || d.departmentId || d.id} value={String(d.deptName || d.departmentName || d.name)}>
+                {d.deptName || d.departmentName || d.name}
+              </option>
+            ))}
+          </select>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
+            <input
+              type="checkbox"
+              checked={hideFull}
+              onChange={e => setHideFull(e.target.checked)}
+              style={{ width: 16, height: 16, cursor: 'pointer' }}
+            />
+            <span>Hide Full Courses</span>
+          </label>
+        </div>
       </div>
 
       {loading ? (
-        <LoadingSpinner message="Loading offerings..." />
+        <LoadingSpinner message="Checking available course offerings..." />
       ) : displayed.length === 0 ? (
         <div className="empty-state">
           <ClipboardList size={48} />
-          <h3>No Offerings Available</h3>
-          <p>There are no course offerings for the selected semester.</p>
+          <h3>No Offerings Found</h3>
+          <p>No course offerings match your filter or search criteria.</p>
         </div>
       ) : (
         <div className="card" style={{ padding: 0 }}>
@@ -107,12 +216,12 @@ export default function CourseRegistration() {
             <table>
               <thead>
                 <tr>
-                  <th>Course ID</th>
-                  <th>Course Name</th>
+                  <th>Course Code</th>
+                  <th>Course Title</th>
                   <th>Faculty</th>
                   <th>Schedule</th>
                   <th>Credits</th>
-                  <th>Seats</th>
+                  <th>Seat Availability</th>
                   <th>Prerequisites</th>
                   <th>Action</th>
                 </tr>
@@ -124,38 +233,82 @@ export default function CourseRegistration() {
                   const max = offering.maxSeats || 0
                   const full = enrolled >= max && max > 0
                   const alreadyReg = registeredOfferingIds.has(id)
+                  const isCompleted = completedOfferingIds.has(id)
                   const isRegistering = registering === id
                   const prereqs = Array.isArray(offering.prerequisites)
                     ? offering.prerequisites
                     : offering.prerequisites ? [offering.prerequisites] : []
 
+                  // Prerequisite checks
+                  const unmetPrereqs = prereqs.filter(p => !completedCourseIds.has(p))
+                  const hasUnmetPrereqs = unmetPrereqs.length > 0
+
+                  // Schedule conflict detection
+                  const conflictingReg = !alreadyReg && !isCompleted
+                    ? findConflictingRegistration(offering.schedule, activeRegistrationsInSem)
+                    : null
+
+                  // Credit limit check
+                  const wouldExceedCredits = !alreadyReg && !isCompleted && (currentSemesterCredits + (offering.credits || 0) > MAX_SEMESTER_CREDITS)
+
+                  const pctOccupied = max > 0 ? Math.round((enrolled / max) * 100) : 0
+                  const seatColor = full ? 'var(--error)' : pctOccupied >= 80 ? 'var(--warning)' : 'var(--success)'
+
                   return (
-                    <tr key={id}>
+                    <tr key={id} style={{ opacity: full && !alreadyReg ? 0.75 : 1 }}>
                       <td>
                         <span className="badge badge-navy">{offering.courseId}</span>
                       </td>
-                      <td style={{ fontWeight: 600 }}>{offering.courseName || offering.courseId}</td>
-                      <td>{offering.facultyName || '—'}</td>
-                      <td style={{ fontSize: 12.5 }}>{offering.schedule || '—'}</td>
-                      <td><span className="badge badge-info">{offering.credits}</span></td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Users size={13} style={{ color: full ? 'var(--error)' : 'var(--success)' }} />
-                          <span style={{ fontSize: 13, color: full ? 'var(--error)' : 'inherit' }}>
+                        <div style={{ fontWeight: 600 }}>{offering.courseName || offering.courseId}</div>
+                        {offering.departmentName && (
+                          <div style={{ fontSize: 11, color: 'var(--gray-600)' }}>{offering.departmentName}</div>
+                        )}
+                      </td>
+                      <td>{offering.facultyName || '—'}</td>
+                      <td>
+                        <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Clock size={11} style={{ opacity: 0.6 }} />
+                          <span>{offering.schedule || 'TBA'}</span>
+                        </div>
+                        {conflictingReg && (
+                          <div style={{ fontSize: 11, color: 'var(--error)', fontWeight: 600, marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <AlertTriangle size={11} /> Overlaps with {conflictingReg.courseId}
+                          </div>
+                        )}
+                      </td>
+                      <td><span className="badge badge-info">{offering.credits} cr</span></td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}>
+                          <Users size={13} style={{ color: seatColor }} />
+                          <span style={{ fontWeight: 600, color: seatColor }}>
                             {enrolled}/{max}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--gray-600)' }}>
+                            ({Math.max(0, max - enrolled)} left)
                           </span>
                         </div>
                       </td>
                       <td>
                         {prereqs.length > 0 ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {prereqs.map((p, i) => (
-                              <span key={i} className="badge badge-warning" style={{ fontSize: 11 }}>{p}</span>
-                            ))}
+                            {prereqs.map((p, i) => {
+                              const met = completedCourseIds.has(p)
+                              return (
+                                <span
+                                  key={i}
+                                  className={`badge badge-${met ? 'success' : 'warning'}`}
+                                  style={{ fontSize: 11 }}
+                                  title={met ? `Completed prerequisite ${p}` : `Unmet prerequisite: requires ${p}`}
+                                >
+                                  {met ? `✓ ${p}` : p}
+                                </span>
+                              )
+                            })}
                           </div>
                         ) : (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--success)', fontSize: 13 }}>
-                            <Check size={13} /> None
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--success)', fontSize: 12 }}>
+                            <Check size={12} /> None
                           </span>
                         )}
                       </td>
@@ -164,8 +317,36 @@ export default function CourseRegistration() {
                           <span className="badge badge-success">
                             <Check size={11} style={{ marginRight: 3 }} /> Registered
                           </span>
+                        ) : isCompleted ? (
+                          <span className="badge badge-info">
+                            <Check size={11} style={{ marginRight: 3 }} /> Completed
+                          </span>
                         ) : full ? (
                           <span className="badge badge-error">Seats Full</span>
+                        ) : conflictingReg ? (
+                          <span
+                            className="badge badge-error"
+                            style={{ cursor: 'help' }}
+                            title={`Conflict: ${offering.schedule} overlaps with registered ${conflictingReg.courseId} (${conflictingReg.schedule})`}
+                          >
+                            Time Conflict
+                          </span>
+                        ) : wouldExceedCredits ? (
+                          <span
+                            className="badge badge-warning"
+                            style={{ cursor: 'help' }}
+                            title={`Exceeds max limit of ${MAX_SEMESTER_CREDITS} credits (Current: ${currentSemesterCredits} + ${offering.credits} = ${currentSemesterCredits + offering.credits})`}
+                          >
+                            Exceeds Limit
+                          </span>
+                        ) : hasUnmetPrereqs ? (
+                          <span
+                            className="badge badge-warning"
+                            style={{ cursor: 'help' }}
+                            title={`Missing prerequisites: ${unmetPrereqs.join(', ')}`}
+                          >
+                            Prereq Required
+                          </span>
                         ) : (
                           <button
                             className="btn btn-primary btn-sm"

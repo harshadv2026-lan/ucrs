@@ -80,17 +80,17 @@ export default function FacultyOfferings() {
               >
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--navy)' }}>
-                    {offering.course?.courseName || 'Unknown Course'}
+                    {offering.courseName || offering.course?.courseName || 'Unknown Course'}
                     <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', background: 'var(--sky)', color: 'var(--blue)', padding: '2px 8px', borderRadius: '99px' }}>
-                      {offering.course?.courseId}
+                      {offering.courseId || offering.course?.courseId}
                     </span>
                   </div>
                   <div style={{ marginTop: '0.35rem', fontSize: '0.875rem', color: 'var(--gray-400)', display: 'flex', gap: '1.5rem' }}>
-                    <span>📅 {offering.semester?.semesterName || 'N/A'}</span>
+                    <span>📅 {offering.semesterName || offering.semester?.semesterName || 'N/A'}</span>
                     <span>🕐 {offering.schedule || 'No schedule'}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Users size={13} />
-                      {offering.registeredCount || offering.enrolledCount || 0} / {offering.maxSeats || 60} seats
+                      {offering.registeredCount ?? offering.enrolledCount ?? 0} / {offering.maxSeats || 60} seats
                     </span>
                   </div>
                 </div>
@@ -121,19 +121,24 @@ export default function FacultyOfferings() {
                               </tr>
                             </thead>
                             <tbody>
-                              {(studentLists[offering.offeringId] || []).map((s, i) => (
-                                <tr key={s.studentRegNo || i}>
-                                  <td style={{ fontFamily: 'monospace' }}>{s.studentRegNo}</td>
-                                  <td>{s.firstName || s.studentName} {s.lastName || ''}</td>
-                                  <td>{s.department?.deptName || s.deptName || '—'}</td>
-                                  <td>
-                                    <span className={`badge badge-${s.status === 'REGISTERED' ? 'info' : s.status === 'COMPLETED' ? 'success' : 'warning'}`}>
-                                      {s.status || 'REGISTERED'}
-                                    </span>
-                                  </td>
-                                  <td>{s.grade || '—'}</td>
-                                </tr>
-                              ))}
+                              {(studentLists[offering.offeringId] || []).map((s, i) => {
+                                const regNo = s.student?.studentRegNo || s.studentRegNo || '—'
+                                const name = s.student ? `${s.student.firstName || ''} ${s.student.lastName || ''}`.trim() : (s.studentName || s.firstName || '—')
+                                const dept = s.student?.department?.deptName || s.department?.deptName || s.deptName || '—'
+                                return (
+                                  <tr key={s.regId || regNo || i}>
+                                    <td style={{ fontFamily: 'monospace' }}>{regNo}</td>
+                                    <td>{name}</td>
+                                    <td>{dept}</td>
+                                    <td>
+                                      <span className={`badge badge-${s.status === 'REGISTERED' ? 'info' : s.status === 'COMPLETED' ? 'success' : 'warning'}`}>
+                                        {s.status || 'REGISTERED'}
+                                      </span>
+                                    </td>
+                                    <td>{s.grade || '—'}</td>
+                                  </tr>
+                                )
+                              })}
                             </tbody>
                           </table>
                         </div>

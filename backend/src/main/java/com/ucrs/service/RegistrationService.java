@@ -6,12 +6,15 @@ import com.ucrs.exception.RegistrationException;
 import com.ucrs.exception.ResourceNotFoundException;
 import com.ucrs.model.*;
 import com.ucrs.repository.*;
+import com.ucrs.util.ScheduleUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,9 @@ public class RegistrationService {
     private final StudentRepository studentRepository;
     private final CourseOfferingRepository offeringRepository;
     private final PrerequisiteRepository prerequisiteRepository;
+
+    @Value("${ucrs.registration.max-semester-credits:20}")
+    private int maxSemesterCredits = 20;
 
     public List<StudentRegistrationDTO> findByStudent(String studentRegNo) {
         studentRepository.findById(studentRegNo)
@@ -41,10 +47,19 @@ public class RegistrationService {
         CourseOffering offering = offeringRepository.findById(offeringId)
                 .orElseThrow(() -> new ResourceNotFoundException("CourseOffering", "id", offeringId));
 
-        // 3. Check for duplicate registration (ignore DROPPED rows — re-registration after drop is allowed)
-        if (registrationRepository.existsActiveByStudentAndOffering(studentRegNo, offeringId)) {
-            throw new DuplicateRegistrationException(
-                    "Student " + studentRegNo + " is already registered for offering " + offeringId);
+        // 3. Check for existing registration
+        java.util.Optional<Registration> existingOpt = registrationRepository
+                .findByStudent_StudentRegNoAndOffering_OfferingId(studentRegNo, offeringId);
+        if (existingOpt.isPresent()) {
+            Registration existing = existingOpt.get();
+            if ("REGISTERED".equalsIgnoreCase(existing.getStatus())) {
+                throw new DuplicateRegistrationException(
+                        "Student " + studentRegNo + " is already registered for offering " + offeringId);
+            }
+            if ("COMPLETED".equalsIgnoreCase(existing.getStatus())) {
+                throw new RegistrationException(
+                        "Student " + studentRegNo + " has already completed offering " + offeringId);
+            }
         }
 
         // 4. Check seat availability (pessimistic locking via count query in same tx)
@@ -57,13 +72,59 @@ public class RegistrationService {
         // 5. Check prerequisites
         validatePrerequisites(student, offering.getCourse());
 
-        // 6. Create registration
-        Registration registration = Registration.builder()
-                .student(student)
-                .offering(offering)
-                .registrationDate(LocalDate.now())
-                .status("REGISTERED")
-                .build();
+        // 6. Check semester credit limit
+        int currentSemesterCredits = registrationRepository.findByStudent_StudentRegNo(studentRegNo)
+                .stream()
+                .filter(r -> "REGISTERED".equalsIgnoreCase(r.getStatus())
+                        && r.getOffering().getSemester().getSemesterId().equals(offering.getSemester().getSemesterId())
+                        && !r.getOffering().getOfferingId().equals(offeringId))
+                .mapToInt(r -> r.getOffering().getCourse().getCredits())
+                .sum();
+
+        int courseCredits = offering.getCourse().getCredits();
+        if (currentSemesterCredits + courseCredits > maxSemesterCredits) {
+            throw new RegistrationException("Credit limit exceeded: Registering for " + courseCredits
+                    + " credits would bring semester total to " + (currentSemesterCredits + courseCredits)
+                    + " credits, which exceeds the limit of " + maxSemesterCredits + " credits for "
+                    + offering.getSemester().getSemesterName());
+        }
+
+        // 7. Check schedule conflicts with other active registrations in the same semester
+        String candidateSchedule = offering.getSchedule();
+        if (candidateSchedule != null && !candidateSchedule.trim().isEmpty()) {
+            List<Registration> activeInSemester = registrationRepository.findByStudent_StudentRegNo(studentRegNo)
+                    .stream()
+                    .filter(r -> "REGISTERED".equalsIgnoreCase(r.getStatus())
+                            && r.getOffering().getSemester().getSemesterId().equals(offering.getSemester().getSemesterId())
+                            && !r.getOffering().getOfferingId().equals(offeringId))
+                    .toList();
+
+            for (Registration existingReg : activeInSemester) {
+                CourseOffering activeOff = existingReg.getOffering();
+                if (ScheduleUtils.hasConflict(candidateSchedule, activeOff.getSchedule())) {
+                    throw new RegistrationException("Schedule conflict: " + offering.getCourse().getCourseId()
+                            + " (" + candidateSchedule + ") conflicts with already registered course "
+                            + activeOff.getCourse().getCourseId() + " (" + activeOff.getCourse().getCourseName()
+                            + ") scheduled at " + activeOff.getSchedule());
+                }
+            }
+        }
+
+        // 8. Create or reactivate registration (prevents UK constraint violation after drop)
+        Registration registration;
+        if (existingOpt.isPresent()) {
+            registration = existingOpt.get();
+            registration.setRegistrationDate(LocalDate.now());
+            registration.setStatus("REGISTERED");
+            registration.setGrade(null);
+        } else {
+            registration = Registration.builder()
+                    .student(student)
+                    .offering(offering)
+                    .registrationDate(LocalDate.now())
+                    .status("REGISTERED")
+                    .build();
+        }
 
         return registrationRepository.save(registration);
     }
@@ -96,8 +157,18 @@ public class RegistrationService {
 
     @Transactional
     public Registration dropRegistration(Long regId) {
+        return dropRegistration(regId, null, null);
+    }
+
+    @Transactional
+    public Registration dropRegistration(Long regId, String userId, String userRole) {
         Registration registration = registrationRepository.findById(regId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration", "id", regId));
+        if ("STUDENT".equalsIgnoreCase(userRole) && userId != null && !userId.trim().isEmpty()) {
+            if (!registration.getStudent().getStudentRegNo().equalsIgnoreCase(userId.trim())) {
+                throw new SecurityException("Access denied: You can only drop your own registrations");
+            }
+        }
         if ("DROPPED".equals(registration.getStatus())) {
             throw new RegistrationException("Registration " + regId + " is already dropped");
         }
@@ -141,6 +212,8 @@ public class RegistrationService {
                 .grade(r.getGrade())
                 .status(r.getStatus())
                 .credits(offering.getCourse().getCredits())
+                .schedule(offering.getSchedule())
+                .semesterId(offering.getSemester() != null ? offering.getSemester().getSemesterId() : null)
                 .build();
     }
 }

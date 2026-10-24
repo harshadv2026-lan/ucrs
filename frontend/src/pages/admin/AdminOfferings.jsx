@@ -81,8 +81,11 @@ export default function AdminOfferings() {
   }
 
   const filtered = offerings.filter(o => {
-    const matchesSem = !filterSem || String(o.semester?.semesterId || o.semesterId) === filterSem
-    const matchesSearch = `${o.course?.courseId} ${o.course?.courseName} ${o.faculty?.firstName} ${o.faculty?.lastName}`.toLowerCase().includes(search.toLowerCase())
+    const matchesSem = !filterSem || String(o.semesterId || o.semester?.semesterId) === filterSem
+    const courseId = o.courseId || o.course?.courseId || ''
+    const courseName = o.courseName || o.course?.courseName || ''
+    const facultyName = o.facultyName || (o.faculty ? `${o.faculty.firstName} ${o.faculty.lastName}` : '')
+    const matchesSearch = `${courseId} ${courseName} ${facultyName}`.toLowerCase().includes(search.toLowerCase())
     return matchesSem && matchesSearch
   })
 
@@ -116,17 +119,17 @@ export default function AdminOfferings() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--gray-400)' }}>No offerings found</td></tr>
               ) : filtered.map(o => {
-                const enrolled = o.registeredCount || o.enrolledCount || 0
+                const enrolled = o.registeredCount ?? 0
                 const pct = Math.round((enrolled / (o.maxSeats || 60)) * 100)
                 return (
                   <tr key={o.offeringId}>
                     <td style={{ fontFamily: 'monospace' }}>{o.offeringId}</td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{o.course?.courseName || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-400)' }}>{o.course?.courseId}</div>
+                      <div style={{ fontWeight: 600 }}>{o.courseName || o.course?.courseName || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--gray-400)' }}>{o.courseId || o.course?.courseId}</div>
                     </td>
-                    <td>{o.faculty ? `${o.faculty.firstName} ${o.faculty.lastName}` : '—'}</td>
-                    <td>{o.semester?.semesterName || '—'}</td>
+                    <td>{o.facultyName || (o.faculty ? `${o.faculty.firstName} ${o.faculty.lastName}` : '—')}</td>
+                    <td>{o.semesterName || o.semester?.semesterName || '—'}</td>
                     <td style={{ fontSize: '0.8rem' }}>{o.schedule || '—'}</td>
                     <td>
                       <div style={{ fontSize: '0.8rem', marginBottom: '3px' }}>{enrolled}/{o.maxSeats || 60}</div>

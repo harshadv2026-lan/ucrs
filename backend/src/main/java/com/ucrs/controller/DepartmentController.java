@@ -28,18 +28,37 @@ public class DepartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Department>> create(@RequestBody Department department) {
+    public ResponseEntity<ApiResponse<Department>> create(
+            @RequestBody Department department,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can create departments"));
+        }
         Department created = departmentService.create(department);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(created, "Department created"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Department>> update(@PathVariable Long id, @RequestBody Department department) {
+    public ResponseEntity<ApiResponse<Department>> update(
+            @PathVariable Long id,
+            @RequestBody Department department,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can update departments"));
+        }
         return ResponseEntity.ok(ApiResponse.success(departmentService.update(id, department), "Department updated"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can delete departments"));
+        }
         departmentService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Department deleted"));
     }

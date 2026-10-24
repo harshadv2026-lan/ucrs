@@ -97,7 +97,7 @@ export default function GradeManagement() {
             <option value="">-- Choose an offering --</option>
             {offerings.map(o => (
               <option key={o.offeringId} value={o.offeringId}>
-                {o.course?.courseId} — {o.course?.courseName} ({o.semester?.semesterName})
+                {o.courseId || o.course?.courseId} — {o.courseName || o.course?.courseName} ({o.semesterName || o.semester?.semesterName})
               </option>
             ))}
           </select>
@@ -134,11 +134,13 @@ export default function GradeManagement() {
                   {students.map(s => {
                     const rid = s.regId || s.registrationId
                     const isDropped = s.status === 'DROPPED'
+                    const regNo = s.student?.studentRegNo || s.studentRegNo || '—'
+                    const name = s.student ? `${s.student.firstName || ''} ${s.student.lastName || ''}`.trim() : (s.studentName || s.firstName || '—')
                     return (
                       <tr key={rid} style={{ opacity: isDropped ? 0.55 : 1 }}>
                         <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{rid}</td>
-                        <td style={{ fontFamily: 'monospace' }}>{s.studentRegNo}</td>
-                        <td>{s.firstName || s.studentName} {s.lastName || ''}</td>
+                        <td style={{ fontFamily: 'monospace' }}>{regNo}</td>
+                        <td>{name}</td>
                         <td>
                           <span className={`badge badge-${s.status === 'REGISTERED' ? 'info' : s.status === 'COMPLETED' ? 'success' : 'warning'}`}>
                             {s.status}

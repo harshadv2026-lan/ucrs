@@ -17,6 +17,9 @@ api.interceptors.request.use(
       if (user.role) {
         config.headers['X-User-Role'] = user.role.toUpperCase()
       }
+      if (user.id || user.regNo) {
+        config.headers['X-User-Id'] = user.regNo || user.id
+      }
     } catch (_) {}
     return config
   },
@@ -97,6 +100,14 @@ const apiService = {
     create: (data) => api.post('/semesters', data),
     update: (id, data) => api.put(`/semesters/${id}`, data),
     delete: (id) => api.delete(`/semesters/${id}`)
+  },
+
+  admin: {
+    getStats: () => api.get('/admin/stats'),
+    getAnalytics: () => api.get('/admin/analytics'),
+    downloadEnrollmentsCsv: () => api.get('/admin/reports/enrollments/csv', { responseType: 'blob' }),
+    downloadOccupancyCsv: () => api.get('/admin/reports/occupancy/csv', { responseType: 'blob' }),
+    downloadStudentsCsv: () => api.get('/admin/reports/students/csv', { responseType: 'blob' })
   }
 }
 

@@ -9,6 +9,7 @@ import StudentDashboard from './pages/student/StudentDashboard.jsx'
 import CourseCatalogue from './pages/student/CourseCatalogue.jsx'
 import CourseRegistration from './pages/student/CourseRegistration.jsx'
 import MyRegistrations from './pages/student/MyRegistrations.jsx'
+import Timetable from './pages/student/Timetable.jsx'
 
 import FacultyLayout from './components/layout/FacultyLayout.jsx'
 import FacultyDashboard from './pages/faculty/FacultyDashboard.jsx'
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="courses" element={<CourseCatalogue />} />
         <Route path="register" element={<CourseRegistration />} />
         <Route path="my-registrations" element={<MyRegistrations />} />
+        <Route path="timetable" element={<Timetable />} />
       </Route>
 
       <Route

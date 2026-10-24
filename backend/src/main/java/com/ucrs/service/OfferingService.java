@@ -5,6 +5,7 @@ import com.ucrs.exception.ResourceNotFoundException;
 import com.ucrs.model.CourseOffering;
 import com.ucrs.model.Registration;
 import com.ucrs.repository.CourseOfferingRepository;
+import com.ucrs.repository.PrerequisiteRepository;
 import com.ucrs.repository.RegistrationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class OfferingService {
 
     private final CourseOfferingRepository offeringRepository;
     private final RegistrationRepository registrationRepository;
+    private final PrerequisiteRepository prerequisiteRepository;
 
     public List<CourseOfferingDTO> findAll(Long semesterId, Long deptId, Long facultyId) {
         List<CourseOffering> offerings;
@@ -78,10 +80,16 @@ public class OfferingService {
         Long registered = offeringRepository.countActiveRegistrations(o.getOfferingId());
         long available = Math.max(0, o.getMaxSeats() - registered);
 
+        List<String> prereqs = prerequisiteRepository.findByCourseId(o.getCourse().getCourseId())
+                .stream()
+                .map(com.ucrs.model.Prerequisite::getPrereqCourseId)
+                .collect(Collectors.toList());
+
         return CourseOfferingDTO.builder()
                 .offeringId(o.getOfferingId())
                 .courseId(o.getCourse().getCourseId())
                 .courseName(o.getCourse().getCourseName())
+                .description(o.getCourse().getDescription())
                 .credits(o.getCourse().getCredits())
                 .departmentName(o.getCourse().getDepartment() != null ? o.getCourse().getDepartment().getDeptName() : null)
                 .semesterId(o.getSemester().getSemesterId())
@@ -93,6 +101,7 @@ public class OfferingService {
                 .registeredCount(registered)
                 .availableSeats(available)
                 .schedule(o.getSchedule())
+                .prerequisites(prereqs)
                 .build();
     }
 }

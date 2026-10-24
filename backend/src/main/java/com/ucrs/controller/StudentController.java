@@ -28,19 +28,39 @@ public class StudentController {
     }
 
     @GetMapping("/{regNo}")
-    public ResponseEntity<ApiResponse<Student>> getById(@PathVariable String regNo) {
+    public ResponseEntity<ApiResponse<Student>> getById(
+            @PathVariable String regNo,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole,
+            @RequestHeader(value = "X-User-Id", defaultValue = "") String userId) {
+        if ("STUDENT".equalsIgnoreCase(userRole) && userId != null && !userId.trim().isEmpty()) {
+            if (!regNo.equalsIgnoreCase(userId.trim())) {
+                throw new SecurityException("Access denied: You can only view your own student profile");
+            }
+        }
         return ResponseEntity.ok(ApiResponse.success(studentService.findById(regNo)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Student>> create(@RequestBody Student student) {
+    public ResponseEntity<ApiResponse<Student>> create(
+            @RequestBody Student student,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can create students"));
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(studentService.create(student), "Student created"));
     }
 
     @PutMapping("/{regNo}")
     public ResponseEntity<ApiResponse<Student>> update(
-            @PathVariable String regNo, @RequestBody Student student) {
+            @PathVariable String regNo,
+            @RequestBody Student student,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can update students"));
+        }
         return ResponseEntity.ok(ApiResponse.success(studentService.update(regNo, student), "Student updated"));
     }
 

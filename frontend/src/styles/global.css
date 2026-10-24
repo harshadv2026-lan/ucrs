@@ -1059,3 +1059,126 @@ tbody tr:hover { background: var(--gray-50); }
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
 }
+
+/* ─── TIMETABLE STYLES ─── */
+.timetable-grid-wrapper {
+  min-width: 760px;
+  background: white;
+  border-radius: 12px;
+}
+.timetable-header-row {
+  display: grid;
+  grid-template-columns: 80px repeat(5, 1fr);
+  background: var(--navy);
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+.timetable-time-corner {
+  padding: 12px 8px;
+  background: var(--navy-dark);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.timetable-day-header {
+  padding: 12px 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.timetable-day-header:last-child {
+  border-right: none;
+}
+.timetable-hour-row {
+  display: grid;
+  grid-template-columns: 80px repeat(5, 1fr);
+  min-height: 64px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.timetable-hour-row:last-child {
+  border-bottom: none;
+}
+.timetable-time-cell {
+  background: var(--gray-50);
+  border-right: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  font-family: monospace;
+}
+.timetable-cell {
+  border-right: 1px solid var(--gray-200);
+  padding: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: white;
+}
+.timetable-cell:last-child {
+  border-right: none;
+}
+.timetable-event-block {
+  border-left: 4px solid;
+  border-radius: 6px;
+  padding: 6px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.timetable-event-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.09);
+}
+
+/* ─── PRINTABLE DOCUMENT & SLIP STYLES ─── */
+@media print {
+  body {
+    background: white !important;
+    color: #111827 !important;
+    font-size: 12pt !important;
+  }
+  .sidebar,
+  .hamburger,
+  .demo-banner,
+  .no-print,
+  button {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .modal.registration-slip-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .printable-slip {
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .timetable-card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+  .timetable-grid-wrapper {
+    min-width: 100% !important;
+  }
+}

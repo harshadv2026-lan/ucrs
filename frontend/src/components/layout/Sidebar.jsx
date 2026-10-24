@@ -11,7 +11,8 @@ const studentLinks = [
   { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/student/courses', label: 'Course Catalogue', icon: BookOpen },
   { to: '/student/register', label: 'Course Registration', icon: ClipboardList },
-  { to: '/student/my-registrations', label: 'My Registrations', icon: BookMarked }
+  { to: '/student/my-registrations', label: 'My Registrations', icon: BookMarked },
+  { to: '/student/timetable', label: 'My Timetable', icon: CalendarDays }
 ]
 
 const facultyLinks = [

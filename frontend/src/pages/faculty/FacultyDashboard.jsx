@@ -39,8 +39,8 @@ export default function FacultyDashboard() {
     fetchData()
   }, [user])
 
-  const totalStudents = offerings.reduce((sum, o) => sum + (o.registeredCount || o.enrolledCount || 0), 0)
-  const activeSemester = offerings.find(o => o.semester?.isActive === 'Y' || o.semester?.isActive === true)?.semester?.semesterName || 'N/A'
+  const totalStudents = offerings.reduce((sum, o) => sum + (o.registeredCount ?? 0), 0)
+  const activeSemester = offerings.find(o => o.semesterName)?.semesterName || 'Fall 2024'
 
   if (loading) return <LoadingSpinner message="Loading faculty dashboard..." />
 
@@ -126,13 +126,13 @@ export default function FacultyDashboard() {
                 {offerings.map((offering) => (
                   <tr key={offering.offeringId}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{offering.course?.courseName || 'N/A'}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--gray-400)' }}>{offering.course?.courseId}</div>
+                      <div style={{ fontWeight: 600 }}>{offering.courseName || offering.course?.courseName || 'N/A'}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--gray-400)' }}>{offering.courseId || offering.course?.courseId}</div>
                     </td>
-                    <td>{offering.semester?.semesterName || 'N/A'}</td>
+                    <td>{offering.semesterName || offering.semester?.semesterName || 'N/A'}</td>
                     <td>{offering.schedule || '—'}</td>
                     <td>
-                      <span className="badge badge-info">{offering.registeredCount || offering.enrolledCount || 0}</span>
+                      <span className="badge badge-info">{offering.registeredCount ?? 0}</span>
                     </td>
                     <td>{offering.maxSeats || 60}</td>
                     <td>

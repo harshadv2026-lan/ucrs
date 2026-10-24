@@ -41,13 +41,26 @@ public class FacultyController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Faculty>> create(@RequestBody Faculty faculty) {
+    public ResponseEntity<ApiResponse<Faculty>> create(
+            @RequestBody Faculty faculty,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can create faculty"));
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(facultyService.create(faculty), "Faculty created"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Faculty>> update(@PathVariable Long id, @RequestBody Faculty faculty) {
+    public ResponseEntity<ApiResponse<Faculty>> update(
+            @PathVariable Long id,
+            @RequestBody Faculty faculty,
+            @RequestHeader(value = "X-User-Role", defaultValue = "") String userRole) {
+        if (!"ADMIN".equalsIgnoreCase(userRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Only ADMIN can update faculty"));
+        }
         return ResponseEntity.ok(ApiResponse.success(facultyService.update(id, faculty), "Faculty updated"));
     }
 

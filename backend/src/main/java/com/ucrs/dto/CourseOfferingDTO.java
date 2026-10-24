@@ -21,4 +21,6 @@ public class CourseOfferingDTO {
     private Long registeredCount;
     private Long availableSeats;
     private String schedule;
+    private String description;
+    private java.util.List<String> prerequisites;
 }

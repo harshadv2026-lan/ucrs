@@ -21,13 +21,13 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Optional<Registration> findByStudent_StudentRegNoAndOffering_OfferingId(String studentRegNo, Long offeringId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT r FROM Registration r WHERE r.offering.offeringId = :offeringId AND r.status = 'REGISTERED'")
+    @Query("SELECT r FROM Registration r WHERE r.offering.offeringId = :offeringId AND r.status != 'DROPPED'")
     List<Registration> findActiveRegistrationsWithLock(@Param("offeringId") Long offeringId);
 
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.offering.offeringId = :offeringId AND r.status = 'REGISTERED'")
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.offering.offeringId = :offeringId AND r.status != 'DROPPED'")
     Long countActiveRegistrations(@Param("offeringId") Long offeringId);
 
-    @Query("SELECT SUM(r.offering.course.credits) FROM Registration r WHERE r.student.studentRegNo = :regNo AND r.status = 'REGISTERED'")
+    @Query("SELECT SUM(r.offering.course.credits) FROM Registration r WHERE r.student.studentRegNo = :regNo AND r.status IN ('REGISTERED', 'COMPLETED')")
     Integer sumCreditsByStudentRegNo(@Param("regNo") String regNo);
 
     boolean existsByStudent_StudentRegNoAndOffering_OfferingId(String studentRegNo, Long offeringId);
