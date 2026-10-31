@@ -1,5 +1,6 @@
 package com.ucrs.model;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -31,4 +32,20 @@ public class Semester {
 
     @Column(name = "IS_ACTIVE")
     private Boolean isActive;
+
+    @JsonSetter("isActive")
+    public void setIsActiveFlexible(Object val) {
+        if (val instanceof Boolean b) {
+            this.isActive = b;
+        } else if (val instanceof String s) {
+            this.isActive = "Y".equalsIgnoreCase(s) || "true".equalsIgnoreCase(s);
+        } else {
+            this.isActive = false;
+        }
+    }
+
+    @JsonSetter("active")
+    public void setActiveFlexible(Object val) {
+        setIsActiveFlexible(val);
+    }
 }

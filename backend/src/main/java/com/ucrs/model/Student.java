@@ -42,6 +42,9 @@ public class Student {
     @JoinColumn(name = "DEPT_ID")
     private Department department;
 
+    @Transient
+    private Long deptId;
+
     @Column(name = "SEMESTER_NO")
     private Integer semesterNo;
 

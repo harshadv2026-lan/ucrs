@@ -6,7 +6,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner.jsx'
 import AlertMessage from '../../components/common/AlertMessage.jsx'
 import SearchBar from '../../components/common/SearchBar.jsx'
 import { findConflictingRegistration } from '../../utils/schedule.js'
-import { ClipboardList, Check, Users, Calendar, AlertTriangle, BookOpen, Clock } from 'lucide-react'
+import { ClipboardList, Check, Users, Calendar, AlertTriangle, BookOpen, Clock, RotateCcw } from 'lucide-react'
 
 const MAX_SEMESTER_CREDITS = 20
 
@@ -24,35 +24,65 @@ export default function CourseRegistration() {
   const [registering, setRegistering] = useState(null)
   const [alert, setAlert] = useState(null)
 
-  const regNo = user?.regNo || user?.id
+  const regNo = user?.regNo || user?.id || ''
 
-  function loadData() {
+  async function loadData() {
     setLoading(true)
-    Promise.all([
-      apiService.offerings.getAll(filterSem ? { semesterId: filterSem } : {}),
-      apiService.semesters.getAll(),
-      apiService.departments.getAll(),
-      apiService.registrations.getByStudent(regNo)
-    ]).then(([o, s, d, r]) => {
-      setOfferings(Array.isArray(o.data?.data) ? o.data.data : Array.isArray(o.data) ? o.data : [])
-      const sems = Array.isArray(s.data?.data) ? s.data.data : Array.isArray(s.data) ? s.data : []
+    try {
+      const [oRes, sRes, dRes] = await Promise.all([
+        apiService.offerings.getAll(filterSem ? { semesterId: filterSem } : {}),
+        apiService.semesters.getAll(),
+        apiService.departments.getAll()
+      ])
+
+      const offData = Array.isArray(oRes.data?.data) ? oRes.data.data : (Array.isArray(oRes.data) ? oRes.data : [])
+      setOfferings(offData)
+
+      const sems = Array.isArray(sRes.data?.data) ? sRes.data.data : (Array.isArray(sRes.data) ? sRes.data : [])
       setSemesters(sems)
-      setDepartments(Array.isArray(d.data?.data) ? d.data.data : Array.isArray(d.data) ? d.data : [])
-      if (!filterSem) {
-        const active = sems.find(sem => sem.isActive || sem.is_active)
-        if (active) setFilterSem(String(active.semesterId || active.id))
+
+      const depts = Array.isArray(dRes.data?.data) ? dRes.data.data : (Array.isArray(dRes.data) ? dRes.data : [])
+      setDepartments(depts)
+
+      if (!filterSem && sems.length > 0) {
+        const active = sems.find(sem => sem.isActive === true || sem.isActive === 'Y' || sem.is_active)
+        if (active) {
+          setFilterSem(String(active.semesterId || active.id))
+        }
       }
-      setMyRegistrations(Array.isArray(r.data?.data) ? r.data.data : Array.isArray(r.data) ? r.data : [])
-    }).catch(() => {}).finally(() => setLoading(false))
+
+      if (regNo) {
+        try {
+          const rRes = await apiService.registrations.getByStudent(regNo)
+          const regData = Array.isArray(rRes.data?.data) ? rRes.data.data : (Array.isArray(rRes.data) ? rRes.data : [])
+          setMyRegistrations(regData)
+        } catch {
+          setMyRegistrations([])
+        }
+      }
+    } catch (err) {
+      setAlert({ type: 'error', message: 'Failed to load course offerings. Please check your connection and refresh.' })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { if (regNo) loadData() }, [regNo, filterSem])
+  useEffect(() => {
+    loadData()
+  }, [regNo, filterSem])
+
+  function resetFilters() {
+    setFilterSem('')
+    setFilterDept('')
+    setSearch('')
+    setHideFull(false)
+  }
 
   // Active registered courses in the chosen semester
   const activeRegistrationsInSem = myRegistrations.filter(r => {
     if (r.status !== 'REGISTERED') return false
     if (!filterSem) return true
-    return String(r.semesterId) === filterSem || String(r.offering?.semester?.semesterId) === filterSem
+    return String(r.semesterId) === String(filterSem) || String(r.offering?.semester?.semesterId) === String(filterSem)
   })
 
   // Calculate current credits in semester
@@ -89,19 +119,31 @@ export default function CourseRegistration() {
     }
   }
 
+  const cleanSearch = (typeof search === 'string' ? search : '').trim().toLowerCase()
   const displayed = offerings.filter(o => {
-    const matchSem = !filterSem || String(o.semesterId) === filterSem
-    const matchDept = !filterDept || String(o.departmentId || o.department?.deptId) === filterDept || (o.departmentName && o.departmentName.toLowerCase().includes(filterDept.toLowerCase()))
-    const enrolled = o.registeredCount ?? 0
+    const matchSem = !filterSem || String(o.semesterId) === String(filterSem)
+    const matchDept = !filterDept ||
+      String(o.departmentId) === String(filterDept) ||
+      (o.departmentName && o.departmentName.toLowerCase().includes(filterDept.toLowerCase()))
+
     const max = o.maxSeats || 0
-    const full = enrolled >= max && max > 0
+    const enrolled = typeof o.registeredCount === 'number'
+      ? o.registeredCount
+      : (o.availableSeats != null ? Math.max(0, max - o.availableSeats) : 0)
+    const available = typeof o.availableSeats === 'number'
+      ? o.availableSeats
+      : Math.max(0, max - enrolled)
+    const full = available <= 0 && max > 0
+
     if (hideFull && full) return false
 
-    const q = search.toLowerCase()
-    const matchSearch = !q ||
-      (o.courseName || '').toLowerCase().includes(q) ||
-      (o.courseId || '').toLowerCase().includes(q) ||
-      (o.facultyName || '').toLowerCase().includes(q)
+    if (!cleanSearch) return matchSem && matchDept
+
+    const matchSearch =
+      (o.courseName || '').toLowerCase().includes(cleanSearch) ||
+      (o.courseId || '').toLowerCase().includes(cleanSearch) ||
+      (o.facultyName || '').toLowerCase().includes(cleanSearch) ||
+      (o.departmentName || '').toLowerCase().includes(cleanSearch)
 
     return matchSem && matchDept && matchSearch
   })
@@ -161,7 +203,11 @@ export default function CourseRegistration() {
       <div className="card" style={{ marginBottom: 20, padding: '14px 18px' }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <SearchBar value={search} onChange={setSearch} placeholder="Search course code, title, faculty..." />
+            <SearchBar
+              value={search}
+              onChange={(val) => setSearch(typeof val === 'string' ? val : (val?.target?.value ?? ''))}
+              placeholder="Search course code, title, faculty..."
+            />
           </div>
 
           <select
@@ -172,7 +218,7 @@ export default function CourseRegistration() {
             <option value="">All Semesters</option>
             {semesters.map(s => (
               <option key={s.semesterId || s.id} value={String(s.semesterId || s.id)}>
-                {s.name || s.semesterName} {(s.isActive || s.is_active) ? '(Active)' : ''}
+                {s.name || s.semesterName} {(s.isActive === true || s.isActive === 'Y' || s.is_active) ? '(Active)' : ''}
               </option>
             ))}
           </select>
@@ -199,6 +245,17 @@ export default function CourseRegistration() {
             />
             <span>Hide Full Courses</span>
           </label>
+
+          {(filterSem || filterDept || search || hideFull) && (
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={resetFilters}
+              title="Reset all filters"
+              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              <RotateCcw size={13} /> Reset
+            </button>
+          )}
         </div>
       </div>
 
@@ -208,7 +265,12 @@ export default function CourseRegistration() {
         <div className="empty-state">
           <ClipboardList size={48} />
           <h3>No Offerings Found</h3>
-          <p>No course offerings match your filter or search criteria.</p>
+          <p>No course offerings match your current filter or search criteria.</p>
+          {(filterSem || filterDept || search || hideFull) && (
+            <button className="btn btn-secondary btn-sm" onClick={resetFilters} style={{ marginTop: 12 }}>
+              Reset All Filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="card" style={{ padding: 0 }}>
@@ -229,15 +291,21 @@ export default function CourseRegistration() {
               <tbody>
                 {displayed.map(offering => {
                   const id = offering.offeringId || offering.id
-                  const enrolled = offering.registeredCount ?? 0
                   const max = offering.maxSeats || 0
-                  const full = enrolled >= max && max > 0
+                  const enrolled = typeof offering.registeredCount === 'number'
+                    ? offering.registeredCount
+                    : (offering.availableSeats != null ? Math.max(0, max - offering.availableSeats) : 0)
+                  const available = typeof offering.availableSeats === 'number'
+                    ? offering.availableSeats
+                    : Math.max(0, max - enrolled)
+                  const full = available <= 0 && max > 0
+
                   const alreadyReg = registeredOfferingIds.has(id)
                   const isCompleted = completedOfferingIds.has(id)
                   const isRegistering = registering === id
                   const prereqs = Array.isArray(offering.prerequisites)
                     ? offering.prerequisites
-                    : offering.prerequisites ? [offering.prerequisites] : []
+                    : (offering.prerequisites ? [offering.prerequisites] : [])
 
                   // Prerequisite checks
                   const unmetPrereqs = prereqs.filter(p => !completedCourseIds.has(p))
@@ -285,7 +353,7 @@ export default function CourseRegistration() {
                             {enrolled}/{max}
                           </span>
                           <span style={{ fontSize: 11, color: 'var(--gray-600)' }}>
-                            ({Math.max(0, max - enrolled)} left)
+                            ({available} left)
                           </span>
                         </div>
                       </td>

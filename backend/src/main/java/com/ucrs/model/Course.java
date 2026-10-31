@@ -27,4 +27,10 @@ public class Course {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "DEPT_ID")
     private Department department;
+
+    @Transient
+    private Long deptId;
+
+    @Transient
+    private java.util.List<String> prerequisites;
 }

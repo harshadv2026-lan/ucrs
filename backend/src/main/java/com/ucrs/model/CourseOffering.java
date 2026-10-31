@@ -28,6 +28,15 @@ public class CourseOffering {
     @JoinColumn(name = "FACULTY_ID")
     private Faculty faculty;
 
+    @Transient
+    private String courseId;
+
+    @Transient
+    private Long semesterId;
+
+    @Transient
+    private Long facultyId;
+
     @Column(name = "MAX_SEATS", nullable = false)
     private Integer maxSeats;
 

@@ -11,13 +11,13 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 
 const COLOR_PALETTE = [
-  { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', badge: '#dbeafe' },
-  { bg: '#f0fdf4', border: '#22c55e', text: '#166534', badge: '#dcfce7' },
-  { bg: '#faf5ff', border: '#a855f7', text: '#6b21a8', badge: '#f3e8ff' },
-  { bg: '#fffbeb', border: '#f59e0b', text: '#92400e', badge: '#fef3c7' },
-  { bg: '#fdf2f8', border: '#ec4899', text: '#9d174d', badge: '#fce7f3' },
-  { bg: '#f0fdfa', border: '#14b8a6', text: '#115e59', badge: '#ccfbf1' },
-  { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', badge: '#fee2e2' },
+  { bg: '#E8F5EE', border: '#21865B', text: '#15382E', badge: '#CBE8DC' },
+  { bg: '#FDF8EA', border: '#D4A72C', text: '#7A5E10', badge: '#F5E4B5' },
+  { bg: '#EBF4F0', border: '#15382E', text: '#0D241D', badge: '#C8E3D7' },
+  { bg: '#F0FDF4', border: '#22C55E', text: '#166534', badge: '#DCFCE7' },
+  { bg: '#FFFBEB', border: '#F59E0B', text: '#92400E', badge: '#FEF3C7' },
+  { bg: '#F0FDFA', border: '#14B8A6', text: '#115E59', badge: '#CCFBF1' },
+  { bg: '#FAF5FF', border: '#8B5CF6', text: '#5B21B6', badge: '#EDE9FE' },
 ]
 
 export default function Timetable() {

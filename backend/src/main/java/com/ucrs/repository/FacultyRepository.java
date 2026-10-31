@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface FacultyRepository extends JpaRepository<Faculty, Long> {
     Optional<Faculty> findByEmail(String email);
     List<Faculty> findByDepartment_DeptId(Long deptId);
+    long countByDepartment_DeptId(Long deptId);
 }

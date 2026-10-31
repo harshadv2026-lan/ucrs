@@ -11,4 +11,6 @@ import java.util.List;
 public interface PrerequisiteRepository extends JpaRepository<Prerequisite, PrerequisiteId> {
     List<Prerequisite> findByCourseId(String courseId);
     void deleteByCourseId(String courseId);
+    List<Prerequisite> findByPrereqCourseId(String prereqCourseId);
+    long countByPrereqCourseId(String prereqCourseId);
 }

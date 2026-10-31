@@ -39,4 +39,7 @@ public class Faculty {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "DEPT_ID")
     private Department department;
+
+    @Transient
+    private Long deptId;
 }

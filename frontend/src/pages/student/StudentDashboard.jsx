@@ -7,7 +7,7 @@ import AlertMessage from '../../components/common/AlertMessage.jsx'
 import RegistrationSlip from '../../components/common/RegistrationSlip.jsx'
 import {
   BookOpen, ClipboardList, GraduationCap, Star,
-  ArrowRight, User, Building2, CalendarDays, Clock, FileText, CheckCircle
+  ArrowRight, User, Building2, CalendarDays, Clock, FileText, CheckCircle, Sparkles
 } from 'lucide-react'
 
 const MAX_CREDITS = 20
@@ -80,6 +80,9 @@ export default function StudentDashboard() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link to="/student/recommendations" className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'var(--warm-gold-border)', color: 'var(--warm-gold-text)', background: 'var(--warm-gold-light)' }}>
+            <Sparkles size={15} style={{ color: 'var(--warm-gold)' }} /> Recommendations
+          </Link>
           <button
             className="btn btn-secondary"
             onClick={() => setShowSlip(true)}

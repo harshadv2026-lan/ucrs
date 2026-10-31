@@ -18,6 +18,22 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
 
     List<Registration> findByOffering_OfferingId(Long offeringId);
 
+    List<Registration> findByStudent_StudentRegNoAndStatus(String studentRegNo, String status);
+
+    List<Registration> findByOffering_OfferingIdAndStatus(Long offeringId, String status);
+
+    void deleteByStudent_StudentRegNoAndStatus(String studentRegNo, String status);
+
+    void deleteByOffering_OfferingIdAndStatus(Long offeringId, String status);
+
+    void deleteByStudent_StudentRegNo(String studentRegNo);
+
+    void deleteByOffering_OfferingId(Long offeringId);
+
+    long countByStudent_StudentRegNo(String studentRegNo);
+
+    long countByOffering_OfferingId(Long offeringId);
+
     Optional<Registration> findByStudent_StudentRegNoAndOffering_OfferingId(String studentRegNo, Long offeringId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

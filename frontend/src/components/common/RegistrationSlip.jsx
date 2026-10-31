@@ -30,13 +30,13 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
         {/* Printable Official Slip Area */}
         <div className="printable-slip" style={{ padding: '36px 40px', background: '#ffffff', color: '#111827' }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #1a2b4e', paddingBottom: 18, marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #15382E', paddingBottom: 18, marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 56, height: 56, background: '#1a2b4e', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <div style={{ width: 56, height: 56, background: '#15382E', border: '2px solid #D4A72C', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4A72C' }}>
                 <GraduationCap size={32} />
               </div>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: '#1a2b4e', letterSpacing: '0.5px' }}>
+                <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: '#15382E', letterSpacing: '0.5px' }}>
                   STATE UNIVERSITY OF TECHNOLOGY
                 </h1>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: '#4b5563', fontWeight: 600 }}>
@@ -48,8 +48,8 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: '#ecfdf5', border: '1px solid #10b981', color: '#065f46', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>
-                <CheckCircle2 size={14} /> ENROLLED
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: '#E8F5EE', border: '1px solid #21865B', color: '#15382E', borderRadius: 99, fontSize: 12, fontWeight: 700 }}>
+                <CheckCircle2 size={14} color="#21865B" /> ENROLLED
               </div>
               <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>Date: {today}</div>
             </div>
@@ -65,7 +65,7 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
             </div>
             <div>
               <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Registration Number</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e40af', marginTop: 2, fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#21865B', marginTop: 2, fontFamily: 'monospace' }}>
                 {student?.studentRegNo || 'N/A'}
               </div>
             </div>
@@ -89,14 +89,14 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
             </div>
             <div>
               <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Document ID</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginTop: 2, fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#7A5E10', marginTop: 2, fontFamily: 'monospace' }}>
                 {verificationCode}
               </div>
             </div>
           </div>
 
           {/* Enrolled Courses Table */}
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: '#1a2b4e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: '#15382E', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Registered Course Schedule
           </h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 24, fontSize: 13 }}>
@@ -126,7 +126,7 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
                     <td style={{ padding: '10px 12px', color: '#4b5563' }}>{reg.facultyName || 'TBA'}</td>
                     <td style={{ padding: '10px 12px', color: '#4b5563' }}>{reg.schedule || 'TBA'}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                      <span style={{ padding: '2px 8px', borderRadius: 4, background: '#dbeafe', color: '#1e40af', fontSize: 11, fontWeight: 700 }}>
+                      <span style={{ padding: '2px 8px', borderRadius: 4, background: '#E8F5EE', color: '#15382E', border: '1px solid #A7D7C1', fontSize: 11, fontWeight: 700 }}>
                         REGISTERED
                       </span>
                     </td>
@@ -147,11 +147,11 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
                 <span style={{ color: '#64748b' }}>Total Courses:</span>
                 <strong>{activeRegistrations.length}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: '#1a2b4e', borderTop: '1px solid #cbd5e1', paddingTop: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: '#15382E', borderTop: '1px solid #cbd5e1', paddingTop: 6 }}>
                 <span>Total Registered Credits:</span>
                 <span>{totalCredits} cr</span>
               </div>
-              <div style={{ fontSize: 11, color: '#10b981', marginTop: 4, fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: '#21865B', marginTop: 4, fontWeight: 600 }}>
                 Within maximum allowable limit (20 credits)
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function RegistrationSlip({ isOpen, onClose, student, registratio
             </div>
             <div>
               <div style={{ borderBottom: '1px solid #94a3b8', height: 40, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#2563eb' }}>[ VERIFIED BY UCRS REGISTRAR ]</span>
+                <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#21865B', fontWeight: 700 }}>[ VERIFIED BY UCRS REGISTRAR ]</span>
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#334155', marginTop: 6 }}>Office of the Registrar</div>
               <div style={{ fontSize: 11, color: '#64748b' }}>State University of Technology</div>

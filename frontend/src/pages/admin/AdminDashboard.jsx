@@ -61,12 +61,12 @@ export default function AdminDashboard() {
   const offeringOccupancy = analytics?.offeringOccupancy || []
 
   const quickLinks = [
-    { label: 'Manage Students', icon: GraduationCap, path: '/admin/students', color: '#2563eb' },
-    { label: 'Manage Faculty', icon: Users, path: '/admin/faculty', color: '#10b981' },
-    { label: 'Manage Courses', icon: BookOpen, path: '/admin/courses', color: '#8b5cf6' },
-    { label: 'Course Offerings', icon: LayoutDashboard, path: '/admin/offerings', color: '#0891b2' },
-    { label: 'Departments', icon: Building2, path: '/admin/departments', color: '#f59e0b' },
-    { label: 'Semesters', icon: CalendarDays, path: '/admin/semesters', color: '#ef4444' }
+    { label: 'Manage Students', icon: GraduationCap, path: '/admin/students', color: '#21865B' },
+    { label: 'Manage Faculty', icon: Users, path: '/admin/faculty', color: '#15382E' },
+    { label: 'Manage Courses', icon: BookOpen, path: '/admin/courses', color: '#D4A72C' },
+    { label: 'Course Offerings', icon: LayoutDashboard, path: '/admin/offerings', color: '#21865B' },
+    { label: 'Departments', icon: Building2, path: '/admin/departments', color: '#D4A72C' },
+    { label: 'Semesters', icon: CalendarDays, path: '/admin/semesters', color: '#15382E' }
   ]
 
   // Top 5 most full offerings
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
       {/* Top Level Metric Stat Cards */}
       <div className="stats-grid" style={{ marginBottom: 24 }}>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}>
+          <div className="stat-icon" style={{ background: 'rgba(33,134,91,0.12)', color: '#21865B' }}>
             <GraduationCap size={22} />
           </div>
           <div className="stat-info">
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+          <div className="stat-icon" style={{ background: 'rgba(21,56,46,0.12)', color: '#15382E' }}>
             <Users size={22} />
           </div>
           <div className="stat-info">
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
+          <div className="stat-icon" style={{ background: 'rgba(212,167,44,0.15)', color: '#D4A72C' }}>
             <BookOpen size={22} />
           </div>
           <div className="stat-info">
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
+          <div className="stat-icon" style={{ background: 'rgba(33,134,91,0.12)', color: '#21865B' }}>
             <TrendingUp size={22} />
           </div>
           <div className="stat-info">
@@ -157,16 +157,16 @@ export default function AdminDashboard() {
         <div className="card" style={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BarChart3 size={18} color="var(--blue)" /> Department Student Distribution
+              <BarChart3 size={18} color="var(--forest-green)" /> Department Student Distribution
             </h2>
-            <span style={{ fontSize: 12, color: 'var(--gray-600)' }}>Students per dept</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Students per dept</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {departmentStats.map((dept, i) => {
               const maxStudent = Math.max(1, ...departmentStats.map(d => d.studentCount || 0))
               const pct = Math.round(((dept.studentCount || 0) / maxStudent) * 100)
-              const colors = ['#2563eb', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899']
+              const colors = ['#21865B', '#15382E', '#D4A72C', '#2AA26E', '#B58B1E']
               const color = colors[i % colors.length]
 
               return (
@@ -188,23 +188,23 @@ export default function AdminDashboard() {
         <div className="card" style={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CheckCircle2 size={18} color="var(--success)" /> Enrollment Status & Capacity
+              <CheckCircle2 size={18} color="var(--forest-green)" /> Enrollment Status & Capacity
             </h2>
-            <span style={{ fontSize: 12, color: 'var(--gray-600)' }}>Total: {summary.totalRegistrations}</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Total: {summary.totalRegistrations}</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#1e40af' }}>{statusBreakdown.REGISTERED || 0}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#3b82f6', textTransform: 'uppercase' }}>Active</div>
+            <div style={{ background: 'var(--forest-light)', border: '1px solid var(--forest-border)', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--emerald-deep)' }}>{statusBreakdown.REGISTERED || 0}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--forest-green)', textTransform: 'uppercase' }}>Active</div>
             </div>
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#166534' }}>{statusBreakdown.COMPLETED || 0}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#22c55e', textTransform: 'uppercase' }}>Completed</div>
+            <div style={{ background: 'var(--gold-light)', border: '1px solid var(--gold-border)', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--gold-text)' }}>{statusBreakdown.COMPLETED || 0}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--warm-gold)', textTransform: 'uppercase' }}>Completed</div>
             </div>
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#64748b' }}>{statusBreakdown.DROPPED || 0}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Dropped</div>
+            <div style={{ background: 'var(--gray-100)', border: '1px solid var(--border-card)', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-muted)' }}>{statusBreakdown.DROPPED || 0}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Dropped</div>
             </div>
           </div>
 

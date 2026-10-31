@@ -79,7 +79,7 @@ export default function LoginPage() {
 
       <div className="login-header">
         <div className="login-logo">
-          <GraduationCap size={36} color="white" />
+          <GraduationCap size={36} color="#D4A72C" />
         </div>
         <h1>UCRS</h1>
         <p>University Course Registration System</p>

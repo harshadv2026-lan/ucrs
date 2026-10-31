@@ -19,6 +19,14 @@ public interface CourseOfferingRepository extends JpaRepository<CourseOffering, 
 
     List<CourseOffering> findByFaculty_FacultyId(Long facultyId);
 
+    List<CourseOffering> findByCourse_CourseId(String courseId);
+
+    long countByCourse_CourseId(String courseId);
+
+    long countByFaculty_FacultyId(Long facultyId);
+
+    long countBySemester_SemesterId(Long semesterId);
+
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.offering.offeringId = :offeringId AND r.status != 'DROPPED'")
     Long countActiveRegistrations(@Param("offeringId") Long offeringId);
 }

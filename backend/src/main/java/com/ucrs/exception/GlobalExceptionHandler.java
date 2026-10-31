@@ -1,6 +1,7 @@
 package com.ucrs.exception;
 
 import com.ucrs.dto.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,6 +19,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataDependencyException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataDependency(DataDependencyException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String msg = "Database referential integrity constraint violation: Dependent records prevent deletion. Please remove or reassign related records first.";
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("foreign key")) {
+            msg = "Referential integrity protection: Dependent records in related tables prevent deletion.";
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(msg));
     }
 
     @ExceptionHandler(RegistrationException.class)

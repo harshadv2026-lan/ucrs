@@ -3,14 +3,15 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import {
   GraduationCap, LayoutDashboard, BookOpen, ClipboardList,
   Users, BookMarked, Award, Settings, LogOut, Menu, X,
-  Building2, CalendarDays, Layers, ChevronRight
+  Building2, CalendarDays, Layers, ChevronRight, Sun, Moon, Sparkles
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const studentLinks = [
   { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/student/courses', label: 'Course Catalogue', icon: BookOpen },
   { to: '/student/register', label: 'Course Registration', icon: ClipboardList },
+  { to: '/student/recommendations', label: 'Recommendations', icon: Sparkles },
   { to: '/student/my-registrations', label: 'My Registrations', icon: BookMarked },
   { to: '/student/timetable', label: 'My Timetable', icon: CalendarDays }
 ]
@@ -45,6 +46,19 @@ function getInitials(name = '') {
 export default function Sidebar({ isDemo }) {
   const { user, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('ucrs_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('ucrs_theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
   const links = getLinks(user?.role)
   const roleLabel = { student: 'Student Portal', faculty: 'Faculty Portal', admin: 'Admin Portal' }[user?.role] || 'Portal'
 
@@ -105,6 +119,11 @@ export default function Sidebar({ isDemo }) {
               </div>
             </div>
           </div>
+          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+            {theme === 'dark' ? <Sun size={15} color="#D4A72C" /> : <Moon size={15} color="#D4A72C" />}
+            <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            <span className="theme-toggle-badge">{theme.toUpperCase()}</span>
+          </button>
           <button className="sidebar-logout" onClick={logout}>
             <LogOut size={15} />
             <span>Sign Out</span>

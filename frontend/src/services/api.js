@@ -108,6 +108,13 @@ const apiService = {
     downloadEnrollmentsCsv: () => api.get('/admin/reports/enrollments/csv', { responseType: 'blob' }),
     downloadOccupancyCsv: () => api.get('/admin/reports/occupancy/csv', { responseType: 'blob' }),
     downloadStudentsCsv: () => api.get('/admin/reports/students/csv', { responseType: 'blob' })
+  },
+
+  recommendations: {
+    getForStudent: (regNo, params) => api.get(`/recommendations/${regNo}`, { params }),
+    getTopics: () => api.get('/recommendations/topics'),
+    syncGraph: () => api.post('/recommendations/sync'),
+    getStatus: () => api.get('/recommendations/status')
   }
 }
 

@@ -11,6 +11,7 @@ public class CourseOfferingDTO {
     private String courseId;
     private String courseName;
     private Integer credits;
+    private Long departmentId;
     private String departmentName;
     private Long semesterId;
     private String semesterName;

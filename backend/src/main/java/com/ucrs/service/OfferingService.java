@@ -1,12 +1,19 @@
 package com.ucrs.service;
 
 import com.ucrs.dto.CourseOfferingDTO;
+import com.ucrs.exception.DataDependencyException;
 import com.ucrs.exception.ResourceNotFoundException;
+import com.ucrs.model.Course;
 import com.ucrs.model.CourseOffering;
+import com.ucrs.model.Faculty;
 import com.ucrs.model.Registration;
+import com.ucrs.model.Semester;
 import com.ucrs.repository.CourseOfferingRepository;
+import com.ucrs.repository.CourseRepository;
+import com.ucrs.repository.FacultyRepository;
 import com.ucrs.repository.PrerequisiteRepository;
 import com.ucrs.repository.RegistrationRepository;
+import com.ucrs.repository.SemesterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +28,9 @@ public class OfferingService {
     private final CourseOfferingRepository offeringRepository;
     private final RegistrationRepository registrationRepository;
     private final PrerequisiteRepository prerequisiteRepository;
+    private final CourseRepository courseRepository;
+    private final SemesterRepository semesterRepository;
+    private final FacultyRepository facultyRepository;
 
     public List<CourseOfferingDTO> findAll(Long semesterId, Long deptId, Long facultyId) {
         List<CourseOffering> offerings;
@@ -54,6 +64,54 @@ public class OfferingService {
 
     @Transactional
     public CourseOffering create(CourseOffering offering) {
+        // Resolve Course
+        String courseId = null;
+        if (offering.getCourse() != null && offering.getCourse().getCourseId() != null) {
+            courseId = offering.getCourse().getCourseId();
+        } else if (offering.getCourseId() != null) {
+            courseId = offering.getCourseId();
+        }
+        if (courseId == null || courseId.isBlank()) {
+            throw new IllegalArgumentException("Course is required for course offering");
+        }
+        final String targetCourseId = courseId;
+        Course course = courseRepository.findById(targetCourseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course", "id", targetCourseId));
+        offering.setCourse(course);
+
+        // Resolve Semester
+        Long semesterId = null;
+        if (offering.getSemester() != null && offering.getSemester().getSemesterId() != null) {
+            semesterId = offering.getSemester().getSemesterId();
+        } else if (offering.getSemesterId() != null) {
+            semesterId = offering.getSemesterId();
+        }
+        if (semesterId == null) {
+            throw new IllegalArgumentException("Semester is required for course offering");
+        }
+        final Long targetSemesterId = semesterId;
+        Semester semester = semesterRepository.findById(targetSemesterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Semester", "id", targetSemesterId));
+        offering.setSemester(semester);
+
+        // Resolve Faculty (optional)
+        Long facultyId = null;
+        if (offering.getFaculty() != null && offering.getFaculty().getFacultyId() != null) {
+            facultyId = offering.getFaculty().getFacultyId();
+        } else if (offering.getFacultyId() != null) {
+            facultyId = offering.getFacultyId();
+        }
+        if (facultyId != null) {
+            final Long targetFacultyId = facultyId;
+            Faculty faculty = facultyRepository.findById(targetFacultyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Faculty", "id", targetFacultyId));
+            offering.setFaculty(faculty);
+        }
+
+        if (offering.getMaxSeats() == null || offering.getMaxSeats() <= 0) {
+            offering.setMaxSeats(60);
+        }
+
         return offeringRepository.save(offering);
     }
 
@@ -61,19 +119,87 @@ public class OfferingService {
     public CourseOffering update(Long id, CourseOffering updated) {
         CourseOffering existing = offeringRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CourseOffering", "id", id));
-        existing.setMaxSeats(updated.getMaxSeats());
-        existing.setSchedule(updated.getSchedule());
-        if (updated.getFaculty() != null) {
-            existing.setFaculty(updated.getFaculty());
+
+        if (updated.getMaxSeats() != null) {
+            existing.setMaxSeats(updated.getMaxSeats());
         }
+        if (updated.getSchedule() != null) {
+            existing.setSchedule(updated.getSchedule());
+        }
+
+        // Faculty update
+        Long facultyId = null;
+        if (updated.getFaculty() != null && updated.getFaculty().getFacultyId() != null) {
+            facultyId = updated.getFaculty().getFacultyId();
+        } else if (updated.getFacultyId() != null) {
+            facultyId = updated.getFacultyId();
+        }
+        if (facultyId != null) {
+            final Long targetFacultyId = facultyId;
+            Faculty faculty = facultyRepository.findById(targetFacultyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Faculty", "id", targetFacultyId));
+            existing.setFaculty(faculty);
+        }
+
+        // Semester update if provided
+        Long semId = null;
+        if (updated.getSemester() != null && updated.getSemester().getSemesterId() != null) {
+            semId = updated.getSemester().getSemesterId();
+        } else if (updated.getSemesterId() != null) {
+            semId = updated.getSemesterId();
+        }
+        if (semId != null) {
+            final Long targetSemId = semId;
+            Semester sem = semesterRepository.findById(targetSemId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Semester", "id", targetSemId));
+            existing.setSemester(sem);
+        }
+
+        // Course update if provided
+        String courseId = null;
+        if (updated.getCourse() != null && updated.getCourse().getCourseId() != null) {
+            courseId = updated.getCourse().getCourseId();
+        } else if (updated.getCourseId() != null) {
+            courseId = updated.getCourseId();
+        }
+        if (courseId != null) {
+            final String targetCourseId = courseId;
+            Course course = courseRepository.findById(targetCourseId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Course", "id", targetCourseId));
+            existing.setCourse(course);
+        }
+
         return offeringRepository.save(existing);
     }
 
     @Transactional
     public void delete(Long id) {
-        offeringRepository.findById(id)
+        CourseOffering offering = offeringRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CourseOffering", "id", id));
-        offeringRepository.deleteById(id);
+
+        String courseLabel = offering.getCourse() != null ? offering.getCourse().getCourseName() : "Course";
+
+        // 1. Check for COMPLETED registrations (grades / academic records)
+        List<Registration> completed = registrationRepository.findByOffering_OfferingIdAndStatus(id, "COMPLETED");
+        if (!completed.isEmpty()) {
+            throw new DataDependencyException("COURSE_OFFERING", id,
+                    String.format("Cannot delete course offering #%d (%s): %d completed student grade record(s) exist. Historical academic transcripts must be preserved.",
+                            id, courseLabel, completed.size()));
+        }
+
+        // 2. Check for active (REGISTERED) students
+        List<Registration> active = registrationRepository.findByOffering_OfferingIdAndStatus(id, "REGISTERED");
+        if (!active.isEmpty()) {
+            throw new DataDependencyException("COURSE_OFFERING", id,
+                    String.format("Cannot delete course offering #%d (%s): %d student(s) are actively registered. Students must drop or be un-enrolled before deletion.",
+                            id, courseLabel, active.size()));
+        }
+
+        // 3. Purge dropped registration history for this offering safely in this transaction
+        registrationRepository.deleteByOffering_OfferingId(id);
+
+        // 4. Delete offering
+        offeringRepository.delete(offering);
     }
 
     public CourseOfferingDTO toDTO(CourseOffering o) {
@@ -91,6 +217,7 @@ public class OfferingService {
                 .courseName(o.getCourse().getCourseName())
                 .description(o.getCourse().getDescription())
                 .credits(o.getCourse().getCredits())
+                .departmentId(o.getCourse().getDepartment() != null ? o.getCourse().getDepartment().getDeptId() : null)
                 .departmentName(o.getCourse().getDepartment() != null ? o.getCourse().getDepartment().getDeptName() : null)
                 .semesterId(o.getSemester().getSemesterId())
                 .semesterName(o.getSemester().getSemesterName())

@@ -265,7 +265,10 @@ public class DemoDataService implements ApplicationRunner {
                 CourseOffering.builder().course(cs501).semester(fall2024).faculty(alice).maxSeats(35).schedule("Fri 10:00-13:00").build(),
                 CourseOffering.builder().course(it101).semester(fall2024).faculty(carol).maxSeats(55).schedule("Tue/Thu 11:00-12:30").build(),
                 CourseOffering.builder().course(it201).semester(fall2024).faculty(david).maxSeats(40).schedule("Mon/Wed 15:00-16:30").build(),
-                CourseOffering.builder().course(it301).semester(fall2024).faculty(carol).maxSeats(35).schedule("Tue/Thu 14:00-15:30").build()
+                CourseOffering.builder().course(it301).semester(fall2024).faculty(carol).maxSeats(35).schedule("Tue/Thu 14:00-15:30").build(),
+                CourseOffering.builder().course(cs101).semester(fall2024).faculty(alice).maxSeats(60).schedule("Mon/Wed 09:00-10:30").build(),
+                CourseOffering.builder().course(ec101).semester(fall2024).faculty(eve).maxSeats(45).schedule("Mon/Wed 13:00-14:30").build(),
+                CourseOffering.builder().course(ma101).semester(fall2024).faculty(grace).maxSeats(70).schedule("Mon/Wed/Fri 08:00-09:00").build()
         );
         courseOfferingRepository.saveAll(offerings);
         log.info("Seeded {} course offerings", offerings.size());

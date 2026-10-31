@@ -60,7 +60,7 @@ export default function FacultyDashboard() {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(37,99,235,0.12)', color: '#2563eb' }}>
+          <div className="stat-icon" style={{ background: 'rgba(33,134,91,0.12)', color: '#21865B' }}>
             <BookOpen size={22} />
           </div>
           <div className="stat-info">
@@ -69,7 +69,7 @@ export default function FacultyDashboard() {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>
+          <div className="stat-icon" style={{ background: 'rgba(21,56,46,0.12)', color: '#15382E' }}>
             <Users size={22} />
           </div>
           <div className="stat-info">
@@ -78,7 +78,7 @@ export default function FacultyDashboard() {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
+          <div className="stat-icon" style={{ background: 'rgba(212,167,44,0.15)', color: '#D4A72C' }}>
             <Calendar size={22} />
           </div>
           <div className="stat-info">
@@ -87,7 +87,7 @@ export default function FacultyDashboard() {
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>
+          <div className="stat-icon" style={{ background: 'rgba(33,134,91,0.12)', color: '#21865B' }}>
             <Award size={22} />
           </div>
           <div className="stat-info">
